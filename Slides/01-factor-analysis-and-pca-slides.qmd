@@ -1,0 +1,267 @@
+---
+title: "Factor Analysis & Principal Component Analysis"
+subtitle: "Part 1 of 3 — Foundations for the EFA/CFA Workshop"
+author: "Mei Ling Soh"
+date: last-modified
+format:
+  revealjs:
+    theme: default
+    slide-number: true
+    footer: "Factor Analysis Workshop — Part 1: FA & PCA"
+    transition: fade
+    chalkboard: true
+    smaller: false
+---
+
+# Before You Start: Key Terms
+
+## Recommended Pre-Reading
+
+**Essential — Kline (2016):**
+
+- Ch. 9, "Specification and Identification of CFA Models" (pp. 188–211) — EFA vs CFA contrast, CFA identification rules
+- Ch. 13, "Analysis of CFA Models" (pp. 300–334) — estimation, worked example, respecification, Likert indicators
+- Ch. 12, "Global Fit Testing" (pp. 262–299) — reasoning behind χ², RMSEA, SRMR
+
+**Helpful background — Kline (2016):**
+
+- Ch. 4, "Data Preparation and Psychometrics Review" (pp. 64–96) — positive definiteness, outliers, normality, missing data, reliability/validity
+
+**Optional (PCA only) — Konishi (2014):**
+
+- Section 9.1, "Principal Components" (pp. 225–239) — mathematically-oriented treatment; **does not cover EFA or CFA**
+
+## Why Terminology Matters
+
+- Factor analysis terminology gets used loosely — this is one of the most common sources of student confusion
+- Keep this glossary handy as a reference for the rest of the workshop
+
+## Key Terms: What You Measure vs What You Infer
+
+- **Observed variable** (indicator, item, manifest variable): something you actually measured — a survey item, test score, questionnaire response
+- **Latent variable**: something you did *not* directly measure, but believe exists and drives the pattern of answers across observed variables — inferred only from correlations, never observed directly
+- **Construct**: the theoretical/conceptual idea a latent variable represents (e.g., "job satisfaction," "maths anxiety")
+  - "Construct" and "latent variable" are often interchangeable; construct emphasises theoretical meaning, latent variable emphasises statistical role
+
+## Key Terms: Factor vs Component
+
+- **Factor**: the statistical term for a latent variable *specifically within factor analysis*
+  - "The model has three factors" = three latent variables being estimated
+- **Component**: specific to **PCA**
+  - A weighted combination of observed variables, built to capture as much variance as possible
+  - Easy to confuse with "factor" — different logic entirely (see PCA section)
+  - A component is *built from* observed variables; a factor is the underlying *cause of* observed variables
+
+## Key Terms: Loading, Communality, Uniqueness, Fit
+
+- **Factor loading**: how strongly an observed variable relates to a factor (higher absolute value = stronger relationship)
+- **Communality**: proportion of a variable's variance explained by the factor(s) it loads on
+- **Uniqueness (error variance)**: the leftover proportion *not* explained by the factor(s) — variable-specific, includes measurement error
+- **Eigenvalue**: how much total variance a possible factor/component accounts for — used to decide how many factors to keep
+- **Model fit**: how well a proposed structure reproduces the observed correlation pattern — central to CFA, relevant to EFA too
+
+## Putting the Terms Together
+
+- **Observed variables** = what you measure
+- **Latent variable / construct / factor** = near-synonyms; the unobserved thing believed to cause the pattern in what you measured
+- **Loadings, communalities, uniqueness** = describe the relationship between the two
+- **Component** = a related but conceptually *different* idea belonging to PCA, not factor analysis proper
+
+# What Is Factor Analysis?
+
+## Factor Analysis: The Big Idea
+
+- A family of statistical methods for identifying underlying relationships between measured variables
+- Core idea: if observed variables correlate, that correlation may be explained by one or more **latent variables (factors)** we cannot measure directly
+- Purpose: reduce many observed variables into a smaller number of latent factors that account for shared patterns of correlation
+
+## Two Branches (Plus a Close Relative)
+
+- **Exploratory Factor Analysis (EFA)**: used when the factor structure is *not yet known* — let the data suggest one
+- **Confirmatory Factor Analysis (CFA)**: used when you already have a specific, theory-based structure to *test*
+- **Principal Component Analysis (PCA)**: a closely related technique, often taught alongside FA and frequently confused with it — covered separately, first
+
+## FA and the Validity Framework
+
+- Validity evidence for a measurement instrument comes from **five sources** (AERA, APA, & NCME, 2014):
+  1. Test content
+  2. Response processes
+  3. **Internal structure**
+  4. Relationships to other variables
+  5. Consequences of testing
+- FA (both EFA and CFA) is the primary tool for generating **internal structure** evidence (Arifin, 2023)
+- Reliability analysis is the other major internal-structure source, usually reported *alongside* FA:
+  - **Cronbach's alpha** — traditional, for EFA-derived factors
+  - **McDonald's omega** — increasingly preferred for CFA-derived factors (doesn't assume every item contributes equally) (Brown, 2015)
+
+## Steps in Factor Analysis (General Overview)
+
+1. **Data collection** — adequate sample size for stable estimates
+2. **Correlation matrix** — the raw material FA works from
+3. **Extraction** — statistical method extracts candidate factors/components
+4. **Rotation** (EFA only) — simplifies the structure for interpretation
+5. **Interpretation** — examine loadings to understand what each factor represents
+6. **Validation** — assess reliability/validity, sometimes with an independent CFA
+
+## Applications of Factor Analysis
+
+- **Psychology & education**: underlying traits/constructs in personality inventories, attitude scales, assessments
+- **Marketing**: underlying dimensions of consumer preferences and behaviour
+- **Health & social sciences**: validating questionnaires and scales (wellbeing, quality of life, burnout)
+
+## General Assumptions of Factor Analysis
+
+- **Adequate correlation among variables** — checked via KMO and Bartlett's test of sphericity
+- **Linearity** — relationships between observed variables and factor(s) assumed linear
+- **Adequate sample size** — rule of thumb: 5–10 observations per variable, minimum ~100–200 overall (depends heavily on loading strength and variables-per-factor)
+- **No major outliers or extreme non-normality** — both distort correlations and therefore the factor solution
+
+# Principal Component Analysis (PCA)
+
+## What Is PCA?
+
+- Often taught alongside FA, frequently confused with it — but the two answer **different questions**
+- PCA reduces dimensionality by transforming observed variables into a smaller set of **components**: new variables that are weighted combinations of the originals
+  - 1st component: captures as much total variance as possible
+  - 2nd component: captures as much *remaining* variance as possible, and so on
+- PCA treats **all** variance in each variable — including measurement error and variable-specific quirks — as worth capturing
+
+## PCA vs Factor Analysis: The Core Difference
+
+- Factor analysis assumes genuine **latent variables cause** the correlations among observed variables
+  - Explicitly separates communality (shared variance) from uniqueness (variable-specific variance, incl. error)
+- **PCA** builds new variables that summarise your data as efficiently as possible
+- **Factor analysis** tries to uncover the hidden causes that produced your data
+
+## When Does the Distinction Matter?
+
+- When variables are strongly correlated and communalities are high → PCA and FA often look very similar (part of why they get conflated)
+- The distinction matters most when:
+  - Your goal is genuinely to identify underlying **constructs** for theory/measurement → favour FA
+  - Your goal is purely data reduction / an efficient summary index or predictor → PCA is defensible and simpler
+  - You plan to report "factor loadings" and interpret them as reflecting a latent construct → technically belongs to FA, not PCA (even though papers often blur this)
+
+## PCA Assumptions and Checks
+
+- PCA is a **descriptive technique**, not a formal statistical model — no distributional assumptions like ML-based EFA/CFA — but still has practical prerequisites:
+  - **Adequate correlation among variables** (KMO, Bartlett's)
+  - **Linearity** — PCA finds linear combinations only
+  - **Sufficient sample size** — small samples → unstable solutions
+  - **No extreme outliers** — PCA maximises variance explained, so outliers can dominate the first component
+  - **Comparable variable scales, or standardisation** — run on the correlation matrix (not covariance) if scales differ; this is Jamovi's default
+
+## Testing PCA Assumptions in Jamovi
+
+- **KMO**: Factor → PCA → tick "KMO" under Assumption Checks. Overall KMO > ~.6 acceptable, > .8 good; also check individual-item KMO
+- **Bartlett's test of sphericity**: same panel; significant (p < .05) supports using PCA
+- **Correlation matrix inspection**: tick "Correlation Matrix" to spot near-zero correlations
+- **Outlier/normality check**: Descriptives (histograms, boxplots) before running PCA
+
+## Steps to Run PCA in Jamovi
+
+1. Factor → Principal Component Analysis (PCA)
+2. Move all candidate variables into "Variables"
+3. Under Assumption Checks, tick KMO and Bartlett's test — review before anything else
+4. Under Extraction, choose how many components to retain (eigenvalues > 1 is default; scree plot/parallel analysis often more defensible)
+5. Under Rotation, apply orthogonal rotation if helpful (Varimax) — **PCA in Jamovi has no oblique option**, that's EFA-only
+6. Review eigenvalues, scree plot, component loadings (suppress loadings below e.g. .3)
+7. Save component scores back into the dataset if useful
+
+*Exact menu wording can shift between Jamovi versions — confirm on the version used in the practical.*
+
+## Common Real-World Scenarios in PCA (1/2)
+
+1. **KMO very low (< .5)**: variables aren't correlated enough — reconsider variable set, remove poor items, or conclude PCA isn't appropriate
+2. **Bartlett's test non-significant**: correlation matrix ≈ "no correlation at all" — do not proceed as planned
+3. **One variable loads weakly on every component**: isn't sharing variance — consider dropping, or check mis-coding/reverse-scoring
+
+## Common Real-World Scenarios in PCA (2/2)
+
+4. **No clear elbow in the scree plot**: run parallel analysis, or fall back on a theory-justified fixed number
+5. **Nearly everything loads heavily on the first component**: often a general "size/level" component — decide if that's useful, or if it's masking structure a multi-factor EFA would reveal
+6. **Variables on very different scales**: confirm PCA runs on the correlation matrix (Jamovi default), not covariance
+
+# Caution: PCA or EFA? A Decision Guide
+
+## The Real Question
+
+- One of the most common points of confusion for students meeting these methods for the first time
+- The useful question is **not** "which technique is more advanced?" but:
+
+> **What will you do with the result afterwards?**
+
+## Choose PCA When...
+
+- Your goal is **pure data reduction**, with no theoretical claim about a hidden cause
+  - e.g., collapsing 20 correlated survey items into composite scores for a later regression/cluster analysis
+- You are **not** claiming the components represent "real" underlying constructs — you are compressing data efficiently
+
+## Choose EFA When...
+
+- Your goal is to make a claim about a **latent construct**
+  - e.g., "these eight items are all measuring an underlying trait called maths anxiety"
+- EFA assumes a hidden variable *causes* your items to correlate, and tries to recover it
+- The standard approach for scale development and instrument validation in psychology, education, health research
+  - (PCA is sometimes used there anyway, out of habit or software default)
+
+## Diagnostic and Follow-Up Rules
+
+- **Check your communalities as a diagnostic**:
+  - High & uniform communalities → PCA and EFA tend to converge
+  - Low or highly variable communalities → the two methods can diverge, because PCA still absorbs all variance (incl. item-specific noise) while EFA separates out just the shared part
+- **If you plan to follow up with a CFA, use EFA (not PCA)** at the exploratory stage
+  - CFA tests a *factor* model; PCA components are not the same statistical object — a PCA-then-CFA pipeline is a mismatch, even though it appears in the literature
+
+## Rule of Thumb
+
+- **Pure data reduction, no theoretical commitment → PCA**
+- **Uncovering/validating a latent construct, especially for publication or feeding into CFA → EFA**
+
+## Key Points (Widaman, 2007) — 1/2
+
+- PCA reduces variables while retaining maximum information; EFA measures unobserved (latent), error-free variables
+- When observed variables share little in common: EFA fails to find a well-defined factor, but PCA *will* still find a well-defined component (a component is defined by maximising explained variance, not shared variance)
+- If the goal is to measure an error-free latent variable but PCA is used instead of EFA: loadings will typically be **higher** than EFA would produce — can mislead analysts into thinking they've found a well-defined, error-free factor, when it's really an amalgam of all variance sources including error
+
+## Key Points (Widaman, 2007) — 2/2
+
+- Conversely, if the goal is just to retain variance-capturing variables but EFA is used instead of PCA: factor loadings will typically be **lower** than PCA — can mislead analysts into underestimating how much variance was retained
+- This distinction carries over to SEM extensions:
+  - **PLS-SEM** — models structural relationships between *component* variables (PCA tradition)
+  - **Covariance-based SEM** — models structural relationships between *error-free latent* variables (factor-analytic tradition)
+
+## Further Nuances — 1/2
+
+- The stark contrast above is a **teaching simplification** — most real multivariate data are correlated to some degree, so real-world PCA/EFA differences are usually less marked than a textbook example
+- As the number of variables grows, PCA and EFA results **converge**
+  - Analyses with ≥ 40 variables tend to show only minor differences (Snook & Gorsuch, 1989)
+- High communalities (approaching 1) also bring the two methods closer together — often co-occurs with "many variables"
+
+## Further Nuances — 2/2
+
+- The choice of extraction method matters too: illustrative PCA-vs-EFA comparisons often use Principal Axis Factoring specifically; results can vary with other methods (e.g., ML)
+- The most important consideration — especially for psychometricians (the discipline that developed EFA) — is **conceptual, not statistical**:
+  - EFA rests on a theory dating back to **Spearman (1904)**: unobserved factors determine what we can measure directly
+  - PCA carries **no such theoretical commitment**
+
+# References (Part 1)
+
+## References — 1/2
+
+American Educational Research Association, American Psychological Association, & National Council on Measurement in Education. (2014). *Standards for educational and psychological testing.* American Educational Research Association.
+
+Arifin, W. N. (2023). *Internal structure evidence of validity* [Lecture slides]. Biostatistics and Research Methodology Unit, Universiti Sains Malaysia. https://wnarifin.github.io
+
+Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2nd ed.). Guilford Press.
+
+Kline, R. B. (2016). *Principles and practice of structural equation modeling* (4th ed.). Guilford Press.
+
+Konishi, S. (2014). *Introduction to multivariate analysis: Linear and nonlinear modeling.* CRC Press.
+
+## References — 2/2
+
+Snook, S. C., & Gorsuch, R. L. (1989). Component analysis versus common factor analysis: A Monte Carlo study. *Psychological Bulletin, 106*(1), 148–154.
+
+Spearman, C. (1904). "General intelligence," objectively determined and measured. *The American Journal of Psychology, 15*(2), 201–293.
+
+Widaman, K. F. (2007). Common factors versus components: Principals and principles, errors and misconceptions. In R. Cudeck & R. C. MacCallum (Eds.), *Factor analysis at 100: Historical developments and future directions* (pp. 177–203). Lawrence Erlbaum Associates.

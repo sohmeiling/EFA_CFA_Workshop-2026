@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# R
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# Quarto (internal cache only - rendered *_files/ and *.html outputs are kept)
+/.quarto/
+_freeze/
+*_cache/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# OS junk
+Thumbs.db
+Desktop.ini
+
+# Temp files
+*.tmp
+*~

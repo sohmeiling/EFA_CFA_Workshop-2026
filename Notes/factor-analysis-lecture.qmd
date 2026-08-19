@@ -1,0 +1,534 @@
+---
+title: "Factor Analysis: EFA and CFA"
+format: html
+---
+
+## Recommended pre-reading
+
+Before the workshop, please read the following as preparation. These are drawn from the two textbooks in the shared readings folder.
+
+**Essential — from Kline (2016):**
+
+- Chapter 9, "Specification and Identification of Confirmatory Factor Analysis Models" (pp. 188–211) — contrasts EFA and CFA directly and covers CFA identification rules; the single most relevant chapter for this workshop.
+- Chapter 13, "Analysis of Confirmatory Factor Analysis Models" (pp. 300–334) — estimation, a detailed worked example, respecification, and analysing Likert-scale items as indicators.
+- Chapter 12, "Global Fit Testing" (pp. 262–299) — the reasoning behind model chi-square, RMSEA, and SRMR, which underpins the fit-index guidance in these notes.
+
+**Helpful background, if you'd like a refresher — from Kline (2016):**
+
+- Chapter 4, "Data Preparation and Psychometrics Review" (pp. 64–96) — positive definiteness, outliers, normality, missing data, and score reliability/validity.
+
+**Optional, for an alternative take on PCA specifically — from Konishi (2014):**
+
+- Section 9.1, "Principal Components" (pp. 225–239) — a more mathematically-oriented treatment of PCA's derivation and properties than these notes provide. Note that Konishi (2014) does not cover EFA or CFA at all, so it's only useful for the PCA portion of the workshop.
+
+## Before you start: key terms
+
+Factor analysis has a lot of terminology that gets used loosely, and confusing these terms is one of the most common sources of misunderstanding for students meeting the topic for the first time. Keep this section handy as a reference while you read the rest of the notes.
+
+- **Observed variable (also: indicator, item, manifest variable)**: Something you actually measured — a survey item, a test score, a questionnaire response. This is the data sitting in your spreadsheet.
+- **Latent variable**: Something you did *not* directly measure, but believe exists and influences the pattern of answers you see across a group of observed variables. You cannot observe it directly; you only infer it from the correlations among the things you did measure.
+- **Construct**: The theoretical, conceptual idea a latent variable is meant to represent — for example, "job satisfaction" or "maths anxiety." In practice, "construct" and "latent variable" are often used interchangeably; "construct" emphasises the theoretical meaning, while "latent variable" emphasises its statistical role in the model.
+- **Factor**: The statistical term for a latent variable specifically within factor analysis. When people say "the model has three factors," they mean three latent variables are being estimated.
+- **Component**: A term specific to Principal Component Analysis (PCA). A component is a weighted combination of your observed variables, built to capture as much variance as possible. It is easy to confuse with "factor," but the two come from different logics (see the PCA section below) — a component is *built from* observed variables, whereas a factor is thought of as the underlying cause *of* the observed variables.
+- **Factor loading**: A number that shows how strongly an observed variable is related to a factor. Higher (in absolute value) means a stronger relationship.
+- **Communality**: The proportion of an observed variable's variance that is explained by the factor(s) it loads on.
+- **Uniqueness (or error variance)**: The proportion of an observed variable's variance that is *not* explained by the factor(s) — the leftover, variable-specific part, including measurement error.
+- **Eigenvalue**: A number associated with each possible factor or component that reflects how much of the total variance in the dataset it accounts for. Used to help decide how many factors to keep.
+- **Model fit**: How well a proposed factor structure reproduces the pattern of correlations actually observed in the data. This concept matters for both EFA and CFA, but is especially central to CFA.
+
+A useful way to hold these together: **observed variables** are what you measure; a **latent variable**, **construct**, or **factor** (near-synonyms, with slightly different emphases) is the unobserved thing you believe is causing the pattern in what you measured; **loadings**, **communalities**, and **uniqueness** describe the relationship between the two; and a **component** is a related but conceptually different idea that belongs to PCA, not factor analysis proper.
+
+## What is factor analysis?
+
+Factor analysis is a family of statistical methods used to identify underlying relationships between measured variables. It works on the idea that if a set of observed variables are correlated with each other, that correlation may be explained by one or more latent variables (factors) that we cannot measure directly. Factor analysis helps reduce a large number of observed variables into a smaller number of latent factors that account for the shared patterns of correlation among them.
+
+There are two main branches, which this workshop covers in turn: **Exploratory Factor Analysis (EFA)**, used when you do not yet know the factor structure and want the data to suggest one, and **Confirmatory Factor Analysis (CFA)**, used when you already have a specific, theory-based structure you want to test. A closely related technique, **Principal Component Analysis (PCA)**, is often taught alongside factor analysis and is frequently confused with it, so we cover it separately before moving into EFA.
+
+### Factor analysis and the validity framework
+It's worth situating factor analysis within the broader concept of validity, since this is ultimately why journals and reviewers care about it. Validity evidence for a measurement instrument is generally described as coming from five sources: evidence based on test content, response processes, internal structure, relationships to other variables, and the consequences of testing (AERA, APA, & NCME, 2014). Factor analysis — both EFA and CFA — is the primary tool used to generate **internal structure** evidence: it examines whether the relationships among your items and the components/factors extracted from them actually reflect the construct the instrument is meant to measure (Arifin, 2023). Reliability analysis is the other major source of internal structure evidence, usually reported alongside factor analysis rather than instead of it: Cronbach's alpha is the traditional internal-consistency coefficient reported for EFA-derived factors, while McDonald's omega is increasingly preferred for CFA-derived factors, since it does not assume every item contributes equally to the factor the way alpha does (Brown, 2015) — both are covered again where relevant in the EFA and CFA sections below.
+
+### Steps in factor analysis (general overview)
+1. **Data collection**: Gather data on the variables of interest, ideally with a sample size adequate for stable estimates (see assumptions, below).
+2. **Correlation matrix**: Compute the correlations between all observed variables — this is the raw material factor analysis works from.
+3. **Extraction**: Use a statistical method to extract candidate factors (or components) from the correlation matrix.
+4. **Rotation** (EFA only): Apply a rotation method to make the factor structure simpler and easier to interpret.
+5. **Interpretation**: Examine the loadings to understand what each factor represents and how it relates to the observed variables.
+6. **Validation**: Assess the reliability and validity of the solution — sometimes using an independent CFA on new data.
+
+### Applications of factor analysis
+- **Psychology and education**: Identifying underlying traits or constructs measured by personality inventories, attitude scales, or assessments.
+- **Marketing**: Understanding the underlying dimensions of consumer preferences and behaviour.
+- **Health and social sciences**: Validating questionnaires and scales (e.g., wellbeing, quality of life, burnout).
+
+### General assumptions of factor analysis
+- **Adequate correlation among variables**: Factor analysis only makes sense if your observed variables are meaningfully correlated with each other in the first place. This is typically checked with the Kaiser-Meyer-Olkin (KMO) measure of sampling adequacy and Bartlett's test of sphericity before running the analysis.
+- **Linearity**: The relationships between observed variables and the underlying factor(s) are assumed to be linear.
+- **Adequate sample size**: Larger, more stable samples give more trustworthy factor solutions. A common rule of thumb is at least 5–10 observations per variable, with a minimum of roughly 100–200 observations overall — though this depends heavily on the strength of the loadings and the number of variables per factor.
+- **No major outliers or extreme non-normality**: Both can distort correlations and, therefore, the factor solution.
+
+## Principal Component Analysis (PCA)
+
+PCA is a technique often taught in the same breath as factor analysis, and the two are frequently confused — including by researchers — but they answer different questions.
+
+PCA aims to reduce a dataset's dimensionality by transforming a set of observed variables into a smaller set of **components**: new variables that are weighted combinations of the original ones, constructed so that the first component captures as much of the total variance in the dataset as possible, the second captures as much of the remaining variance as possible, and so on. PCA treats all the variance in each observed variable — including measurement error and variable-specific quirks — as worth capturing.
+
+Factor analysis, by contrast, starts from a different logic: it assumes there are genuine latent variables *causing* the correlations among your observed variables, and it tries to recover those latent variables, explicitly separating the variance they explain (communality) from variance that is unique to each observed variable (uniqueness, including error). In plain terms: **PCA builds new variables that summarise your data as efficiently as possible; factor analysis tries to uncover the hidden causes that produced your data.**
+
+### When does the distinction matter?
+In practice, when the observed variables are strongly correlated and communalities are high, PCA and factor analysis often produce very similar-looking results, which is part of why they get conflated. The distinction matters most when:
+- Your goal is genuinely to identify underlying **constructs** for theoretical or measurement purposes (favour factor analysis).
+- Your goal is purely data reduction or building an efficient summary index/predictor from many variables (PCA is a defensible and simpler choice).
+- You plan to report "factor loadings" and interpret them as reflecting a latent construct — technically, this interpretation belongs to factor analysis, not PCA, even though many published papers use the terms loosely.
+
+### PCA assumptions and checks
+PCA is a descriptive technique rather than a formal statistical model, so it does not carry the same distributional assumptions as ML-based EFA or CFA — but there are still practical prerequisites worth checking before you trust the output:
+
+- **Adequate correlation among variables**: if your variables aren't meaningfully correlated, PCA has nothing to work with. Checked with KMO and Bartlett's test, as below.
+- **Linearity**: PCA looks for linear combinations of variables, so it will miss purely non-linear relationships.
+- **Sufficient sample size**: as with factor analysis generally, small samples give unstable component solutions.
+- **No extreme outliers**: PCA maximises variance explained, so a handful of extreme cases can disproportionately dictate the first component.
+- **Comparable variable scales, or standardisation**: if your variables are on very different scales (e.g., age in years alongside a 5-point rating), run PCA on the correlation matrix rather than the covariance matrix so that scale differences don't dominate the solution — this is Jamovi's default behaviour.
+
+### Testing PCA assumptions in Jamovi
+- **KMO (Kaiser-Meyer-Olkin) measure of sampling adequacy**: Factor → PCA → tick "KMO" under Assumption Checks. An overall KMO above roughly .6 is conventionally treated as acceptable, above .8 as good; also check the individual-item KMO values for any variable that stands out as poorly suited to the analysis.
+- **Bartlett's test of sphericity**: same Assumption Checks panel; a significant result (p < .05) indicates the correlation matrix is meaningfully different from an identity matrix, supporting the use of PCA.
+- **Correlation matrix inspection**: tick "Correlation Matrix" in the PCA output to look directly for variables with near-zero correlations to everything else.
+- **Outlier/normality check**: use Jamovi's Descriptives (histograms, boxplots) on your variables before running PCA.
+
+### Steps to run PCA in Jamovi
+1. Factor → Principal Component Analysis (PCA).
+2. Move all candidate variables into the "Variables" box.
+3. Under Assumption Checks, tick KMO and Bartlett's test and review them before interpreting anything else.
+4. Under Extraction, choose how many components to retain — eigenvalues over 1 is the default, but a fixed number based on a scree plot or parallel analysis is often more defensible.
+5. Under Rotation, apply an orthogonal rotation if it helps interpretation (Varimax is available; PCA in Jamovi does not offer oblique rotations — those are an EFA-only option).
+6. Review the eigenvalues table, scree plot, and component loadings table (you can suppress loadings below a chosen threshold, e.g., .3, to keep the table readable).
+7. If useful, save component scores back into the dataset for use in later analyses.
+
+*(Exact menu wording can shift slightly between Jamovi versions — the underlying sequence and logic above will still apply. Confirm the current layout on the version you'll use in the practical.)*
+
+### Common real-world scenarios in PCA
+1. **KMO is very low (below .5)**: the variables aren't correlated enough for PCA to be meaningful. Reconsider which variables belong together, remove poorly-correlating items, or conclude PCA isn't appropriate for this set.
+2. **Bartlett's test is non-significant**: the correlation matrix is statistically indistinguishable from "no correlation at all." Do not proceed with the planned analysis as-is.
+3. **One variable loads weakly on every component**: it isn't sharing variance with the rest of the set. Consider dropping it, or check whether it was mis-coded or needs reverse-scoring.
+4. **The scree plot has no clear elbow**: run a parallel analysis, or fall back on a fixed number of components justified by theory or practical need (e.g., "we need exactly one composite score for later use").
+5. **Nearly everything loads heavily on the first component**: this is often a general "size" or "level" component (people who score high on one item tend to score high on all of them). Decide whether that single summary score is actually useful for your purposes, or whether it is masking more specific structure that a multi-factor EFA would reveal instead.
+6. **Variables are on very different scales**: confirm PCA is running on the correlation matrix (Jamovi's default), not the covariance matrix, so scale differences don't distort the loadings.
+
+### Caution: PCA or EFA? — a decision guide
+This is one of the most common points of confusion for students meeting these methods for the first time, so it is worth a deliberate pause here. In practice, the more useful question is not "which technique is more advanced?" but **what will you do with the result afterwards?**
+
+- **Choose PCA when your goal is pure data reduction**, with no theoretical claim about a hidden cause — for example, collapsing twenty correlated survey items into a handful of composite scores to use as predictors in a later regression or cluster analysis. You are not claiming the components represent "real" underlying constructs; you are compressing the data efficiently.
+- **Choose EFA when your goal is to make a claim about a latent construct** — for example, "these eight items are all measuring an underlying trait called maths anxiety." EFA is built on the assumption that a hidden variable is causing your items to correlate, and it tries to recover it. This is the standard approach for scale development and instrument validation in psychology, education, and health research, even though PCA is sometimes used there out of habit or because it happens to be a software default.
+- **Check your communalities as a diagnostic**: when communalities are uniformly high, PCA and EFA tend to converge on very similar-looking solutions, which is part of why the two get conflated in practice. When communalities are low or highly variable across items, the two methods can diverge noticeably, because PCA still accounts for all the variance in each variable (including item-specific noise), while EFA deliberately separates out just the shared part.
+- **If you plan to follow up with a CFA**, use EFA (not PCA) at the exploratory stage. CFA tests a *factor* model; PCA components are not the same statistical object as factors, so a PCA-then-CFA pipeline is a mismatch, even though it appears in the literature.
+
+As a rough rule of thumb: reaching for pure data reduction with no theoretical commitment → PCA. Trying to uncover or validate a latent construct, especially one you intend to write up for publication or carry into CFA → EFA.
+
+**Key points** (see Widaman, 2007, for an excellent extended treatment of this distinction):
+
+- PCA is useful for reducing the number of variables while retaining the maximum amount of information in the data; EFA is useful for measuring unobserved (latent), error-free variables.
+- When observed variables share little or nothing in common, EFA will fail to find a well-defined underlying factor, whereas PCA will still find a well-defined component, because a component is defined purely by maximising explained variance rather than by shared, common variance.
+- If the goal is to measure an error-free latent variable but PCA is used instead of EFA, the resulting loadings will typically be higher than an EFA would have produced. This can mislead analysts into believing they have identified a well-defined, error-free factor when what they actually have is a component that is an amalgam of all sources of variance in the data, including error.
+- Conversely, if the goal is simply to retain a small subset of variables that captures the most variance but EFA is used instead of PCA, the resulting factor loadings will typically be lower than a PCA would have produced. This can mislead analysts into believing they have retained less variance than they actually have, because EFA loadings reflect only the variance shared across variables, not the total variance.
+- This distinction carries over into techniques that extend PCA and factor analysis, most notably Structural Equation Modelling (SEM): Partial Least Squares SEM (PLS-SEM) models structural relationships between component variables, in the PCA tradition, whereas covariance-based SEM models structural relationships between error-free latent variables, in the factor-analytic tradition.
+
+**A few further nuances worth keeping in mind:**
+
+- The stark contrast drawn above is a teaching simplification. Most real multivariate data are correlated to some degree, so in practice the differences between PCA and EFA results tend to be far less marked than in a textbook example designed to illustrate the distinction.
+- As the number of variables in the analysis grows, PCA and EFA results tend to converge. Researchers have suggested that analyses involving at least 40 variables tend to produce only minor differences between the two methods (Snook & Gorsuch, 1989).
+- As noted above, when communalities are high (approaching 1), PCA and EFA results are also similar — the two conditions (many variables, high communality) often go together in practice.
+- The choice of extraction method also matters: illustrative comparisons of PCA versus EFA often rely on Principal Axis Factoring specifically, and results can vary somewhat with other estimation methods (e.g., Maximum Likelihood).
+- All of these considerations should inform the choice between PCA and EFA in a given analysis. But arguably the most important consideration, particularly for psychometricians — the discipline that developed EFA in the first place — is conceptual rather than statistical: EFA rests on a theory about the variables being analysed, dating back to Spearman (1904), which holds that unobserved factors are what determine what we are able to measure directly. PCA carries no such theoretical commitment.
+
+## Exploratory Factor Analysis (EFA)
+
+Exploratory Factor Analysis is used to uncover the underlying factor structure of a set of observed variables *without* imposing a structure in advance. It is the right tool when you do not have strong prior theory about how many factors exist or which variables belong together — for example, when developing a new scale or questionnaire. EFA lets the data suggest a structure, which is why it is described as data-driven or hypothesis-generating: its output should generally be treated as a hypothesis to be tested (e.g., with CFA on a new sample), not as a final confirmed result.
+
+EFA has been described as both an art and a science: researchers follow a series of analytic steps that involve judgement calls more reminiscent of qualitative inquiry than of a purely mechanical statistical procedure — a mildly ironic state of affairs, given the mathematical sophistication underlying the models themselves (Osborne, 2008). It is also an extremely widely used technique: a PsycINFO survey covering just a two-year period found more than 1,700 studies using some form of EFA (Osborne, 2008). That popularity cuts both ways. EFA is a genuinely powerful, efficient tool for exploring complex data — but it is also a procedure with few absolute rules, many loosely defined options, and terminology that can vary meaningfully between software packages, which leaves it open to misuse by researchers who aren't fully aware of its limits (Osborne, 2008).
+
+One misuse is worth naming explicitly: **EFA has no inferential statistic for testing overall goodness of fit** — that capability belongs to CFA. Describing an EFA study as having "confirmed" or "validated" a measure is therefore, strictly speaking, a misapplication of the technique's own logic, however common that phrasing is in the published literature (Osborne, 2008). If your study confirms or validates a structure in the statistical sense, it did so with CFA, not EFA — keep this distinction precise in your own write-ups.
+
+### Selecting variables and participants for EFA
+Good EFA results depend as much on what goes into the analysis as on which statistical options are chosen once it's running.
+
+**Variables.** Each measured variable should be selected because it plausibly represents a domain the anticipated factors are meant to tap — not simply because it was convenient to include. Selecting too narrowly, or mixing in variables from unrelated domains, can obscure genuine factors or produce spurious ones (Watkins, 2018). As a rule of thumb, each factor should be measured by at least three variables for statistical identification, though four to six indicators per factor is a more comfortable target for a stable, well-defined ("overdetermined") factor (Fabrigar, Wegener, MacCallum, & Strahan, 1999; Watkins, 2018). Variables that are mathematically dependent on each other — for example, several subscale scores alongside a total score computed by summing them — should not be entered together.
+
+A more subtle caution concerns **formative versus reflective indicators**. EFA assumes *reflective* indicators: the latent factor is thought of as the cause of the observed variable (e.g., "wellbeing" causes someone to endorse "I feel content"). Some variables work the other way round — they are *formative* indicators, where the observed variables combine to determine the construct rather than the reverse. A classic example is socioeconomic status (SES): education, income, and occupational status combine to determine SES, rather than SES itself causing each of those variables. Formative indicators do not fit the logic EFA relies on and should be used with considerable caution, or avoided, in an EFA (Watkins, 2018).
+
+**Participants.** Beyond raw sample size, make sure the sample itself makes sense for the constructs being measured, and avoid pooling clearly different populations, since a factor structure specific to one subgroup can be obscured when groups are combined (Watkins, 2018). On sample size specifically: the simple ratio rules quoted earlier in these notes (e.g., 5–10 cases per variable, 100–200 minimum) are convenient but have been superseded by simulation research showing that the sample size actually needed depends jointly on how strong the variable-factor relationships are, how overdetermined each factor is (how many strong indicators it has), and how many variables are in the analysis — these three characteristics can compensate for one another (Fabrigar et al., 1999; Watkins, 2018). In other words, a smaller sample can still produce a trustworthy solution if loadings are strong and each factor is well-measured, while a larger sample may still be inadequate if loadings are weak. Treat the ratio rules as a rough minimum floor, not a guarantee of adequacy.
+
+If you'd like a quick descriptive benchmark to cite alongside the ratio rules, a commonly quoted scale rates absolute sample sizes as 100 = poor, 200 = fair, 300 = good, 500 = very good, and 1,000 or more = excellent (as cited in Williams, Brown, & Onsman, 2010) — useful as a talking point, though it should be read alongside the more nuanced simulation-based guidance above, not instead of it. Reported sample-size recommendations in the literature genuinely disagree with each other quite a bit (anywhere from N ≥ 50 to N ≥ 300 as a stated minimum, depending on the source), which is itself worth knowing so you don't take any single number as gospel when a reviewer questions your sample size.
+
+### Choosing a method for factor extraction
+Several extraction methods are available for EFA, though in practice a small handful dominate the published literature:
+
+- **Principal Components Analysis (PCA)**: Technically a component-extraction method rather than a true common-factor method (see the PCA section and decision guide above — PCA accounts for all variance, not just shared variance), but it is nonetheless very widely used as the default "extraction method" inside EFA menus in statistical software, including when researchers intend to run a proper factor analysis.
+- **Principal Axis Factoring (PAF)**: Focuses specifically on the shared (common) variance among variables, rather than all variance, making it a closer conceptual match to true factor-analytic logic than PCA. A common default when data are not well-behaved enough for Maximum Likelihood.
+- **Maximum Likelihood (ML)**: Estimates factor loadings by finding the values most likely to have produced the observed correlations. It allows for statistical significance testing and model fit indices, and works well with reasonably normal data.
+- **Unweighted Least Squares (ULS)**: Minimises the discrepancy between the observed and model-reproduced correlation matrix directly, without assuming a particular distribution for the data — a comparatively robust, assumption-light choice.
+- **Generalised Least Squares (GLS)**: Similar to ULS, but weights variables by their reliability (variables with lower communality/reliability are down-weighted), so more reliable variables have a stronger influence on the solution.
+- **Alpha factoring**: Extracts factors to maximise the generalisability (coefficient alpha, i.e., reliability) of the resulting factors across the population of possible items, rather than to maximise variance explained in this particular sample.
+- **Image factoring**: Uses each variable's "image" — the part of it that can be predicted from all the other variables by multiple regression — as the basis for extraction, rather than the principal-axis logic used in PAF.
+
+**Which is actually used in practice?** PCA and PAF are, by a wide margin, the two most commonly used extraction methods in published research (Henson & Roberts, 2006; Tabachnick & Fidell, 2007). The choice between them has been described as "fiercely debated" among methodologists (Henson & Roberts, 2006), but Thompson (2004) notes that the practical differences between PCA and PAF solutions are often negligible, particularly when variables have high reliability or when there are 30 or more variables in the analysis. Thompson (2004) also points out that PCA's popularity owes a good deal to it being the default extraction method in many statistics packages — meaning its widespread use partly reflects software defaults rather than a considered methodological choice. That said, PCA is specifically recommended when no a priori theory or model exists to guide the analysis (Tabachnick & Fidell, 2007), and Pett et al. (2003) suggest using PCA to establish a preliminary solution during early-stage exploratory work, potentially followed up with a true common-factor method such as PAF or ML once a plausible structure emerges.
+
+**A practical takeaway for this workshop**: if your goal is a defensible EFA in the strict sense — recovering latent constructs, separating shared from unique variance — PAF or ML are the more theoretically appropriate defaults. If you're doing early, rough exploratory work, or your software's "factor analysis" procedure defaults to PCA and you understand what that implies (see the PCA vs EFA decision guide earlier in these notes), that is a defensible and common starting point too, as long as you're transparent in your write-up about which method was used and why.
+
+**Choosing between PAF and ML specifically.** Simulation research gives more concrete guidance than "pick whichever": PAF tends to outperform ML — recovering weak factors more reliably — when variable-factor relationships are relatively weak (loadings ≤ .40), the sample is relatively small (≤ 300), multivariate normality is violated, or the correct number of factors is uncertain. ML is the better choice when loadings are stronger (> .40), the sample is large, the data are reasonably normal, and the number of factors has been correctly specified (Watkins, 2018). If either method fails to converge, this often traces back to a data problem rather than the method itself; after ruling that out, it's good practice to also run an alternative extraction method and check that the substantive conclusions replicate.
+
+**A conceptual caution: indeterminacy.** It is a mathematical fact of common factor analysis that more than one set of factors can be constructed to fit the same pattern of correlations among your observed variables equally well (Watkins, 2018). This is called factor indeterminacy, and it's a limitation shared by all multivariate methods that rely purely on empirical (sample) evidence — it's part of why factor interpretation should always be anchored in theory and cross-checked against replication, not treated as a single, uniquely "correct" mathematical answer.
+
+**Naming the "default recipe" directly.** Once you've read the extraction, retention, and rotation subsections below, it's worth stepping back to name a pattern explicitly: the combination that most statistical software quietly defaults to — PCA extraction, the Kaiser eigenvalue-over-1 rule for retention, and Varimax rotation — is also the combination most commonly seen in the published literature, largely *because* it's the default (Osborne, 2008). Each piece of that combination has a specific, named weakness covered in these notes: PCA isn't a true common-factor method at all; the Kaiser criterion tends to over-extract factors; and Varimax forces factors to be uncorrelated, which is often an unrealistic assumption for social science constructs. None of this means the default combination is always wrong — but it means it should be a deliberate choice for your specific data and question, not the path of least resistance through the software menu.
+
+### Communalities and uniqueness
+Communality is the proportion of a variable's variance explained by the extracted factors; uniqueness is the leftover proportion, specific to that variable and not shared with the others. High communalities mean the factors are doing a good job of accounting for that variable; high uniqueness means the variable has a lot going on that the factor solution does not capture — worth a second look before treating a weakly-communal item as part of the same construct as the rest.
+
+### How many factors to retain?
+Several criteria are commonly used together, since no single one is fully reliable on its own:
+
+1. **Kaiser criterion**: Retain factors with eigenvalues greater than 1. Simple, but known to over-extract factors in many situations, so it is best used alongside other criteria rather than alone.
+2. **Scree plot**: Plot the eigenvalues and look for the "elbow" — the point where the curve flattens out — as a visual guide to how many factors carry meaningful variance. A useful subjective adjunct to the empirical criteria below, though researchers can disagree on where the elbow actually is (Watkins, 2018).
+3. **Parallel analysis**: Compares your eigenvalues against eigenvalues generated from random data of the same size; retain only factors that explain more variance than would be expected by chance alone.
+4. **Minimum Average Partial (MAP)**: Repeatedly partials out each successive component from the correlation matrix and tracks the average squared partial correlation remaining; this quantity reaches a minimum at the correct number of components and rises again once only unique (non-shared) variance is left to partial out. Along with parallel analysis, MAP is regarded by simulation studies as one of the two most accurate empirical criteria available, more accurate than the Kaiser criterion (Watkins, 2018).
+5. **Cumulative variance explained**: Retain enough factors to reach a reasonable proportion of total variance explained. Conventions vary considerably by field — natural sciences often expect a high bar (around 95%), while a much lower threshold (around 50–60%) is routinely accepted in the humanities and social sciences (as cited in Williams, Brown, & Onsman, 2010) — so check the norm in your own discipline's published literature rather than assuming a universal cutoff.
+6. **Theoretical and interpretability judgement**: Ultimately, the number of factors retained should also make sense substantively — a statistically defensible solution that produces factors nobody can meaningfully interpret is not a useful outcome.
+
+No single criterion has been found to be correct in all situations, so the recommended approach is to use several together and evaluate the range of plausible solutions they point to, rather than mechanically following one number (Watkins, 2018). This is not just good statistical practice — many peer-reviewed psychology and education journals now explicitly expect manuscripts to report more than one retention criterion before they'll accept an EFA-based paper (as cited in Williams, Brown, & Onsman, 2010), so treat "multiple criteria" as a reporting requirement, not just a nicety. A practical procedure: start by extracting the largest plausible number of factors suggested by these criteria, evaluate that solution's adequacy (see "Interpreting the factor structure," below), then re-run with one fewer factor, and repeat down to the smallest plausible number — comparing solutions rather than committing to the first one that runs.
+
+Two diagnostic terms are useful here. **Overfactoring** (too many factors extracted) tends to be the less damaging error: the genuine factors usually still emerge, alongside one or more small factors defined by very few variables — a factor with fewer than three salient loadings is a typical symptom. **Underfactoring** (too few factors extracted) is generally more damaging: distinct factors can be forced together into one, distorting the loadings for every variable involved, often signalled by variables showing complex loadings across what should be separate factors (Watkins, 2018).
+
+In practice, using two or three of these together (e.g., parallel analysis plus MAP plus interpretability) gives a more defensible answer than relying on the Kaiser criterion alone, which Jamovi shows by default but which is the weakest of the criteria above.
+
+### Factor rotation
+Once factors are extracted, the initial solution is often difficult to interpret because most variables show at least some loading on multiple factors. Rotation re-expresses the same solution in a way that makes the pattern of loadings clearer and easier to interpret, without changing how well the model fits the data.
+
+There are two families of rotation:
+
+- **Orthogonal rotation (e.g., Varimax)**: Keeps the factors uncorrelated (statistically independent) with each other while maximising the spread between high and low loadings, giving a clean, simple structure. Appropriate when you have good theoretical reason to expect the underlying constructs are genuinely unrelated to one another.
+- **Oblique rotation (e.g., Promax, Oblimin)**: Allows the factors to correlate with each other, which is usually more realistic for psychological and social constructs, where related-but-distinct traits are the norm rather than the exception (e.g., different facets of wellbeing tend to correlate rather than being fully independent).
+
+**Which to choose?** In most social science contexts, an oblique rotation (Promax or Oblimin) is the more defensible default, because assuming factors are perfectly uncorrelated is often an unrealistic simplification. If the resulting factor correlations turn out to be very small in practice, that itself is useful information — it suggests an orthogonal solution would have been a reasonable approximation anyway.
+
+**Pattern coefficients vs. structure coefficients.** This distinction only arises for oblique rotation, but it matters a great deal for accurate reporting. An orthogonal rotation produces a single set of loadings, which can be interpreted directly as correlations between each variable and each factor. An oblique rotation, because it allows factors to correlate, produces *two* different sets of numbers:
+
+- **Structure coefficients** are still simple correlations between each variable and each factor.
+- **Pattern coefficients** are more like standardised partial regression weights: the relationship between a variable and a factor *after controlling for* the variable's relationship with the other, correlated factors. Because of this, pattern coefficients can technically fall outside the −1 to +1 range and cannot simply be squared to get "variance explained."
+
+The two will look similar when factor intercorrelations are low, and diverge more as those intercorrelations increase. Most methodologists recommend starting interpretation from the pattern coefficients, since they better isolate each factor's unique contribution, while checking the structure coefficients as a sanity check — a variable with a large pattern coefficient but a small structure coefficient may have little genuine overlap with the construct, while the reverse pattern can flag a variable that is also strongly influenced by other factors (Watkins, 2018). When reporting results, always state explicitly which of the two you are presenting, rather than using the generic term "loading" for either.
+
+### Interpreting the factor structure and factor scores
+After rotation, examine the loadings: which observed variables load strongly on which factor, and does that grouping make theoretical sense? A useful working threshold is that loadings above roughly .40–.50 are worth treating as meaningfully associated ("salient") with a factor, though this is a guide rather than a strict rule, and the appropriate cutoff also depends on sample size (larger samples can treat smaller loadings as statistically dependable). Variables that load similarly on more than one factor (cross-loadings) are often the hardest to interpret and may need to be reconsidered or dropped — unless there is a clear theoretical reason to expect that variable to be influenced by more than one construct.
+
+**Simple structure**, a concept dating back to Thurstone (1947), is the standard goal for an interpretable EFA solution: each factor should be defined by several salient variables, and each variable should load saliently on only one factor. In practice, a solution is usually judged acceptable against four combined criteria (Watkins, 2018):
+1. Each factor is saliently loaded by at least three variables.
+2. Each variable loads saliently on only one factor (no meaningful cross-loadings, unless theoretically justified).
+3. Each factor shows adequate internal consistency (reliability ≥ .70 is a common benchmark).
+4. Every retained factor is theoretically meaningful.
+
+Two further checks are worth building into your workflow. First, inspect the **residual matrix** — the difference between your original correlations and the correlations implied by the factor solution — if your software provides it; residuals of |.10| or larger can suggest there are more factors still to be extracted (Watkins, 2018). Second, if the factors themselves turn out to be substantially intercorrelated, consider whether a **higher-order factor** (a factor that explains the correlations *among* your first-order factors) might be a more parsimonious and interesting way to describe the structure than treating the correlated factors as fully separate constructs.
+
+**Naming factors, carefully.** Factors are hypothetical constructs, inferred from what their most salient variables have in common — never given a name because a name was assumed in advance. Kline (2016) offers three cautions worth keeping in mind: a factor's name is a convenience for communication, not proof that the construct is correctly (or even really) understood; a named factor should not be treated as a literal "real thing" that has been directly observed (a fallacy known as reification); and having the same name across two studies does not guarantee the same underlying construct (the "jingle fallacy"), just as having different names does not guarantee genuinely different constructs (the "jangle fallacy"). A factor's real value lies in the meaningfulness of its relationships with external criteria and its replicability across samples and studies, not in the label it's given.
+
+A **factor score** is a numerical estimate of where a given individual sits on a latent factor, calculated from their responses to the observed variables and the factor loadings. Factor scores are useful when you want to carry the latent construct forward into further analyses (e.g., using "wellbeing" as a predictor in a regression), rather than working with individual items.
+
+There's a genuine range of methods for computing factor scores, from simple "coarse" approaches — such as averaging (or summing) only the items that load saliently on a given factor, ignoring the rest — through to more statistically "refined" approaches that use the full set of factor loadings (typically a regression-based method) to compute a weighted score, which most statistical software will do for you automatically (Grice, 2001). The coarse approach is easy to compute and explain but discards information and can produce factor scores that end up correlated with each other even when the underlying factors themselves were assumed to be uncorrelated; the refined, software-computed methods are generally preferable when precision matters, though they are, strictly speaking, only *estimates* rather than exact values. This connects to the indeterminacy point made earlier: because EFA (unlike PCA) allows for variance unique to each item, there is no single, exact solution for anyone's factor score — only a best estimate — which is itself one of the reasons some researchers gravitate toward PCA, where component scores can be calculated exactly (Taylor, 2001/2004, drawing on Snook & Gorsuch, 1989; Widaman, 1993).
+
+### EFA assumptions and cautions
+- **Adequate sample size**: As a general guide, results become markedly less stable below roughly 100–150 cases, and the ratio of cases to variables matters as much as the raw sample size (see "Selecting variables and participants," above, for the more complete picture).
+- **Adequate correlation among variables**: Check KMO and Bartlett's test before proceeding; if variables are not meaningfully correlated, factor analysis is not an appropriate tool for that dataset. As a quick, informal check, a sizeable number of correlations in your matrix should exceed ±.30 (Watkins, 2018); one commonly cited finer-grained scale treats ±.30 as minimal, ±.40 as important, and ±.50 as practically significant (as cited in Williams, Brown, & Onsman, 2010).
+- **Adequate variable reliability**: Variables with reliability below roughly .70 are generally best avoided in EFA, since low reliability leaves little genuine variance available to be shared with other variables (Fabrigar et al., 1999) — though this standard can be hard to meet when analysing individual test items rather than composite scores.
+- **Watch for range restriction**: If your sample is more homogeneous than the population you're generalising to, correlations (and therefore the factor solution) can be artificially attenuated; this is worth considering when your sample was selected in a way that narrows its variability (e.g., a highly selected group).
+- **Reasonably well-behaved distributions**: Simulation work has flagged univariate skewness ≥ 2.0 and kurtosis ≥ 7.0 as a rough danger zone where results become unreliable (Watkins, 2018); check this via Descriptives, and score all variables in the same direction (reverse-coding as needed) to avoid artefactual factors caused by mixed-direction skew.
+- **Watch for multivariate outliers**, not just univariate ones: Mahalanobis distance is a standard method for flagging cases that are unusual across the *combination* of variables, even when no single variable looks extreme on its own.
+- **Handle missing data deliberately, not by default**: listwise/pairwise deletion are common software defaults but are generally inefficient; as a rough guide, simple imputation methods tend to be adequate under about 10% missingness, with more sophisticated approaches (multiple imputation, full information maximum likelihood) preferable as the proportion of missing data grows (Watkins, 2018).
+- **Treat EFA output as a hypothesis, not a conclusion**: Because EFA searches for the best-fitting structure in your specific sample, some of what it finds may reflect sample-specific noise rather than a genuine, replicable structure. Where possible, confirm an EFA-derived structure on an independent sample using CFA.
+- **Rotation changes interpretation, not fit**: All rotations of a given solution fit the data equally well; the choice of rotation is about interpretability, not about which is "more correct" statistically.
+- **Garbage in, garbage out**: EFA cannot create meaningful constructs out of poorly-written or unrelated items — the quality of your item set matters more than the sophistication of the analysis.
+
+### Testing EFA assumptions in Jamovi
+- **KMO and Bartlett's test**: Factor → Exploratory Factor Analysis → Assumption Checks → tick KMO and Bartlett's test of sphericity. Interpreted the same way as in PCA (see above). Kaiser's own descriptive scale for the overall KMO value is a useful memory aid: values in the .90s are "marvelous," .80s "meritorious," .70s "middling," .60s "mediocre," .50s "miserable," and below .50 "unacceptable" (Kaiser, 1974, as cited in Watkins, 2018).
+- **Determinant of the correlation matrix**: often shown alongside Bartlett's test; a value very close to zero can flag multicollinearity or near-singularity among your items.
+- **Sample size adequacy**: there is no single Jamovi button for this — check your cases-to-variables ratio against the rule of thumb above *before* running the analysis at all.
+- **Normality**: Maximum Likelihood extraction assumes reasonably continuous, normal data. Check with histograms or Q-Q plots via Descriptives, and switch to Minimum Residuals or Principal Axis extraction if your items are ordinal or clearly skewed.
+
+### Steps to run EFA in Jamovi
+1. Factor → Exploratory Factor Analysis.
+2. Move candidate items into the "Variables" box.
+3. Under Extraction, choose a method — Minimum Residuals is Jamovi's default and a reasonable general-purpose choice; switch to Maximum Likelihood if you want fit indices and significance tests, or Principal Axis as an alternative.
+4. Under Factor Retention, tick Eigenvalues (Kaiser) and Parallel Analysis, and inspect the scree plot, to decide how many factors to extract — or fix the number directly if theory dictates it.
+5. Under Rotation, choose an oblique method (Oblimin or Promax) as a sensible general default, or an orthogonal method (Varimax) if you have strong reason to expect uncorrelated factors.
+6. Under Assumption Checks, tick KMO and Bartlett's test and review them before interpreting the factor solution.
+7. Review the factor loadings table (suppress loadings below a chosen threshold, e.g., .3, for readability), communalities/uniqueness, factor correlations (if oblique rotation was used), and any fit indices shown (e.g., RMSEA, TLI, when using ML extraction).
+8. If useful, save factor scores back into the dataset.
+
+*(As with PCA, exact menu labels can vary slightly between Jamovi versions — confirm the current layout on the version you'll use in the practical.)*
+
+### Common real-world scenarios in EFA
+1. **Heywood case** (a communality at or above 1, or a negative uniqueness): the model is over-parameterised for the data — often too many factors relative to the number of items, too small a sample, or an item that essentially duplicates a factor. Try extracting fewer factors, increasing the sample, removing the offending item, or interpreting the result cautiously and flagging it in your write-up.
+2. **Extraction fails to converge**: try a different extraction method (Minimum Residuals is often more stable than ML with awkward data), check for near-perfectly correlated items, or reduce the number of factors requested.
+3. **An item cross-loads similarly on two or more factors**: consider whether the item is genuinely ambiguous (poorly worded, or tapping more than one construct); either drop it or reassign it based on theory, then re-run the analysis.
+4. **An item has very low communality** (e.g., below .2–.3): it is barely related to any extracted factor; consider removing it in a later, refined version of the scale.
+5. **The Kaiser criterion and parallel analysis disagree on the number of factors**: prioritise parallel analysis and interpretability over the Kaiser criterion, and sanity-check the resulting factors against theory.
+6. **Sample size is smaller than you'd like**: report this openly as a limitation, favour a more conservative extraction/rotation choice, and treat the resulting structure as more provisional than usual.
+7. **Items are Likert-type (ordinal) rather than continuous**: be cautious about ML extraction, which assumes continuous, normal data; Minimum Residuals or polychoric-correlation-based approaches are generally more appropriate for ordinal items (the latter may require software beyond Jamovi's default EFA).
+
+### Reporting an EFA: a checklist
+When you get to the write-up stage, a complete EFA methods and results section should be able to answer every item below (adapted from Watkins, 2018). Treat this as a checklist to work through before submitting:
+
+- Justification for the variables included (and, implicitly, excluded).
+- Justification for the type and number of participants included.
+- Data characteristics: descriptive statistics, normality, missing data, and how missing data were handled.
+- Evidence the data were appropriate for EFA: Bartlett's test and KMO.
+- Software and version used.
+- Which correlation matrix was analysed (Pearson, polychoric, etc.).
+- Which factor model was used: PCA or common factor analysis (and if the latter, how communalities were initially estimated).
+- Which extraction (estimation) method was used.
+- How the number of factors to retain was determined (which criteria, and what they indicated).
+- Which rotation method was used.
+- The strategy used to interpret factors, including how "salience" was defined.
+- Percentage of variance accounted for by each factor (and whether this is reported before or after rotation).
+- The complete pattern coefficient matrix — including the small, non-salient coefficients, not just the notable ones.
+- Interfactor correlations, if an oblique rotation was used.
+- Reliability estimates for each retained factor.
+- The complete structure coefficient matrix, if it differs substantially from the pattern matrix.
+- Eigenvalues for all factors, and the full correlation matrix, if space allows.
+
+## Confirmatory Factor Analysis (CFA)
+
+Confirmatory Factor Analysis is a type of factor analysis used to test whether a hypothesised factor structure fits the observed data. Unlike EFA, where the factor structure is allowed to emerge from the data, CFA requires the researcher to specify the structure in advance, based on theory or prior research, and then asks a single question: does the data support this pre-specified structure? For this reason, CFA is often described as theory-driven or hypothesis-testing, whereas EFA is data-driven or hypothesis-generating.
+
+### Steps in CFA
+1. **Specify the model**: Based on theory or prior research (often prior EFA results), state which observed variables (indicators) are expected to load on which latent factors, and which factors, if any, are expected to correlate with each other.
+2. **Check identification**: Confirm that the model contains enough information for the software to arrive at a unique solution (see below).
+3. **Estimate the model**: Fit the specified model to the data using an estimation method such as Maximum Likelihood.
+4. **Assess model fit**: Examine a range of fit indices to judge how well the hypothesised structure reproduces the observed pattern of correlations.
+5. **Examine parameter estimates**: Check that factor loadings, variances, and correlations are meaningful, statistically significant, and in the expected direction.
+6. **Report and, if justified, refine**: Report the results, and only consider modifying the model if there is a strong theoretical (not purely statistical) reason to do so.
+
+### When to use CFA
+CFA is appropriate when you already have a specific, theory-based expectation about how your observed variables group into latent factors — for example, you are testing a published questionnaire's factor structure in a new sample, or confirming the structure suggested by an earlier EFA on an independent dataset. CFA should not be used to explore an unknown structure; using it that way, and then adjusting the model until it fits, undermines the logic of hypothesis testing (see "Modification indices" below).
+
+### Does CFA always need to be preceded by an EFA?
+A common piece of received wisdom, especially from earlier training, is that the correct workflow is always "EFA first, then CFA" — often even treated as a fixed two-step template applied automatically, regardless of the research question. It's worth being precise about where this idea came from and how the field's thinking on it has moved.
+
+Historically, running EFA followed by CFA (sometimes on the very same sample) was the default approach in scale development. That specific version of the practice — confirming a structure with CFA on the same data it was derived from via EFA — is circular and was explicitly challenged by Gerbing and Hamilton (1996), whose work questioned whether EFA should be treated as a required precursor to CFA at all. Their argument, and the methodological discussion that followed it (e.g., Schmitt, 2011), helped shift the field's understanding: **CFA has never technically required a preceding EFA.** What CFA actually requires is a specific, defensible, a priori hypothesis about the factor structure — and that hypothesis can legitimately come from theory alone, from a previously validated and published instrument (for example, testing an established scale in a new population, culture, or language), from someone else's prior EFA published elsewhere, or from an EFA you ran on an *independent* sample.
+
+What has genuinely changed over time is publishing convention rather than statistical logic: it's now entirely standard and accepted in journals to go straight to CFA — skipping EFA altogether — when testing an established measure, doing cross-cultural or measurement-invariance work, or working from a strong theoretical model. Newer techniques such as Exploratory Structural Equation Modeling (ESEM) have blurred the line further still, combining exploratory flexibility with CFA-style fit testing within a single framework.
+
+None of this removes the case for the traditional two-step workflow when it's genuinely warranted: if you are developing a brand-new scale with no prior theory or validated structure to draw on, EFA (ideally on one sample) followed by CFA (on an independent sample) remains the most defensible approach, exactly as described elsewhere in these notes. The point is simply that this sequence is a *justified choice for a specific situation*, not an automatic, universal requirement for every CFA.
+
+The reverse mistake is worth naming too, since it's arguably more common in practice than unnecessary EFA-avoidance: reaching for EFA out of habit when a scale already has solid prior validation and CFA was the appropriate tool all along. Bido, Mantovani, and Cohen (2018) reviewed applications of EFA to already-validated scales in situations where CFA would have been the correct choice, and found EFA used incorrectly in 59% of the cases they examined — with the resulting "discovered" factor structures often diverging from established theory and prior research, undermining comparability with the wider literature (as cited in Rogers, 2024). The practical rule of thumb from these notes still holds either way: if you have a specific, defensible a priori structure to test, use CFA; only fall back to EFA when you genuinely don't.
+
+### Specifying the measurement model
+In plain terms, a CFA model states, for every observed variable, which single latent factor (or factors) it is allowed to be influenced by, and how much of that variable's variance is left over as measurement error or variable-specific variance. This can be described without formulas as: *each observed score is thought of as a mix of the latent factor's influence, plus something unique to that variable that the factor does not explain.* This is the same underlying logic as EFA's loadings and uniqueness, but in CFA every one of these relationships is fixed by the researcher in advance — an indicator either is or is not allowed to load on a given factor — rather than estimated freely for all factors as in EFA.
+
+A minimal, complete specification states three things: which indicators belong to which factors, whether any indicators are allowed to load on more than one factor (cross-loadings), and whether the factors themselves are allowed to correlate with one another.
+
+### Beyond the basic model: bifactor and second-order CFA
+The "standard" CFA model — each indicator loads on exactly one factor, and the factors are allowed to correlate — is sometimes called a correlated-factors or congeneric model, and it's the right default starting point for most applications. Two related but more complex structures come up often enough to be worth knowing by name:
+
+- **Bifactor model**: Every indicator loads on both a single general factor (representing whatever is common across *all* the items) and on one specific first-order factor (representing the narrower domain that item belongs to), with the factors typically constrained to be uncorrelated with one another for identification. This is useful when you want to justify using a single overall score from a multidimensional scale — for example, an overall "quality of life" score computed from physical, psychological, social, and environmental sub-domains.
+- **Second-order (higher-order) model**: The first-order factors are retained as correlated with each other, as in the standard model, but a single second-order factor is added to explain *why* they're correlated — conceptually similar to the "higher-order factor" idea mentioned in the EFA section above, but formally specified and tested here rather than just observed as a pattern of correlations.
+
+These two structures often fit real data similarly well, and bifactor models in particular can appear to fit better simply because they estimate more parameters — which is itself a reason for caution rather than an automatic endorsement (Rogers, 2024). If competing structures (standard, bifactor, second-order) have genuine support in the published literature for your scale, it's worth comparing them explicitly and justifying your final choice, rather than testing only the structure you assumed from the outset and treating alternatives as if they didn't exist.
+
+### Identification: can the model actually be estimated?
+Before a CFA model can be fitted, it must be "identified" — meaning there is enough information in the data for a unique solution to exist. This is a purely technical requirement, but it matters a great deal in practice. Useful rules of thumb include:
+
+- **At least three indicators per factor** is generally the minimum for a factor to be identified on its own; two indicators can work only under additional constraints, and a single-indicator factor requires fixing its error variance to a known value.
+- **The model should have positive degrees of freedom** — in plain language, you should be estimating fewer parameters than the number of unique pieces of information available in the data (the variances and covariances among your observed variables). A model with zero or negative degrees of freedom cannot be tested.
+- Identification problems often show up as estimation errors, impossible values (e.g., negative variances, known as **Heywood cases**), or a model that technically "runs" but produces nonsensical or wildly unstable estimates.
+
+### Data quality and pre-processing before you fit a CFA
+Several data-cleaning steps are worth doing deliberately before estimation, rather than trusting the default handling of whatever software you use:
+
+- **Screen for disengaged respondents**, not just statistical outliers. With Likert-type items, a genuinely unusual raw score (e.g., choosing the extreme "1" or "5" option) is not inherently suspicious, so it's more informative to look at *patterns* across a respondent's answers: a standard deviation at or near zero across all their items (suggesting they picked the same option throughout) or a recognisable straight-line pattern (e.g., all 1s, then all 5s) is a better signal of low engagement than any single extreme response (Rogers, 2024). Where feasible, attention-check items built into the original data collection are the more reliable way to catch this.
+- **Handle missing data deliberately**: under about 5% missingness is generally treated as a minor concern; beyond that, use a principled method (Full Information Maximum Likelihood for continuous data is well supported) rather than simple case deletion. Guidance for handling missing ordinal data specifically is still an active area of methodological development, so document your approach and be transparent about its limitations either way.
+- **Check multicollinearity among indicators** using the Variance Inflation Factor (VIF); a VIF greater than 10 for a given item is a common threshold for flagging problematic redundancy (Kline, 2016).
+- **Don't parcel items** (combining several items into a composite "parcel" before analysis) as a default strategy — there are many different, non-equivalent ways to form parcels, and parceling can mask genuine multidimensionality that a full item-level CFA would have revealed.
+- **When screening for outliers, focus on multivariate outliers rather than univariate ones** — a respondent whose overall response profile is unusual across the combination of items is more relevant than one who simply chose an extreme value on a single item. The residual correlations from a fitted model (the gap between an observed and model-implied correlation) are also a useful outlier diagnostic, since they flag problematic *items* rather than problematic *people*.
+
+### Estimating the model
+Maximum Likelihood (ML) is the default and most widely reported estimation method for CFA; it finds the parameter values that make the observed data most probable under the specified model, and it assumes the observed variables are reasonably continuous and normally distributed.
+
+For a "typical" social science CFA — Likert-type indicators with, say, five response options — recent methodological guidance is more specific than "use ML unless the data look bad": even the robust variant of ML (MLR) is intended for continuous data with only minor departures from normality, not ordinal categorical data (Rogers, 2024, drawing on Bandalos, 2014; Beauducel & Herzberg, 2006; DiStefano & Morgan, 2014, among others). For genuinely ordinal indicators, the recommended default is the ordinary-least-squares family of estimators: **ULS (Unweighted Least Squares)** or **DWLS (Diagonally Weighted Least Squares)** — the latter is also commonly referred to as **WLSMV** in software that reports it that way. Simulation research suggests ULS tends to perform best in smaller samples, while DWLS/WLSMV is the more common choice as sample size grows; the fully-weighted **WLS** estimator generally needs a larger sample still to perform reliably. Wherever possible, use the *robust* version of whichever estimator you choose (e.g., robust DWLS, sometimes labelled RDWLS), since this adjusts the standard errors and test statistics for the fact that Likert-type data are not truly continuous.
+
+Whatever estimator you use, document and justify the choice given your data and model, and report explicitly whether you used the marker-variable method or fixed the factor variance to 1 to set the latent variable's scale.
+
+### Assessing model fit
+Because a CFA model is a hypothesis, not a description, the central question after estimation is: how well does this hypothesised structure reproduce the pattern of relationships actually observed in the data? No single index answers this fully, so researchers typically report several together.
+
+- **Chi-square test**: Tests whether the model-implied covariance structure differs significantly from the observed one. A non-significant result technically indicates good fit, but chi-square is highly sensitive to sample size — with large samples (common in postgraduate and survey research), even trivial, practically unimportant misfit can become statistically significant. For this reason, chi-square is reported but rarely relied on alone.
+- **CFI (Comparative Fit Index) and TLI (Tucker-Lewis Index)**: Compare the fit of your model to a baseline model in which the variables are assumed to be completely unrelated. Values closer to 1 indicate better fit; values at or above roughly .90 are often treated as acceptable and at or above .95 as good, though these are conventions, not hard rules.
+- **RMSEA (Root Mean Square Error of Approximation)**: Reflects how far the model is from a perfect fit per degree of freedom, and importantly comes with a confidence interval. Values at or below roughly .08 are often considered acceptable and at or below .06 good — again, treat these as rough guides rather than pass/fail thresholds.
+- **SRMR (Standardised Root Mean Square Residual)**: Reflects the average discrepancy between the observed and model-implied correlations. Values at or below roughly .08 are typically considered acceptable.
+
+**Caution:** the widely-cited cutoff values above come from simulation studies under specific conditions (e.g., particular sample sizes, numbers of indicators, and degrees of non-normality) and do not travel perfectly to every dataset. Treat them as a starting point for judgement, not as a strict pass/fail rule, and always report the actual index values rather than only "fit was acceptable."
+
+This caution turns out to matter more than it might seem, because the traditional cutoffs above were largely derived from ML-estimated models. Models estimated with DWLS or ULS (the estimators recommended above for ordinal data) tend to naturally produce lower RMSEA and higher CFI values than an equivalent ML-estimated model, so applying the same traditional cutoffs uncritically can make an ordinal-data CFA look better-fitting than it really is (Xia & Yang, 2019). Some methodologists recommend using more conservative cutoffs with these estimators (e.g., SRMR ≤ .06, RMSEA ≤ .06, CFI ≥ .95) rather than the more lenient traditional set — but even that should be applied thoughtfully rather than mechanically. A genuinely emerging alternative is the **Dynamic Fit Index (DFI)** approach (McNeish & Wolf, 2023), which simulates fit-index benchmarks specific to your own model's characteristics (number of factors, indicators, loading strengths) rather than relying on one-size-fits-all cutoffs — worth knowing about even if it's too new and specialised to expect from every student in this workshop.
+
+A few further reporting specifics worth building into habit: always report the chi-square statistic together with its degrees of freedom, and if you're using a robust/scaled estimator, report the *scaled* chi-square rather than the unadjusted one. For the residual correlation matrix (the gap between observed and model-implied correlations), values larger than about |.10| are generally worth a closer look, since they can point to a source of misfit that global fit indices alone might mask. And don't treat a large but statistically non-significant misfit gap as automatically reassuring, or a small but significant one as automatically alarming — global fit indices should be interpreted as approximate effect sizes for how well the model reproduces your data, not as a strict hypothesis test with a fixed accept/reject line (McNeish, 2023b).
+
+### Interpreting parameter estimates
+Beyond overall model fit, examine the individual estimates: are the factor loadings statistically significant, reasonably large (as a very rough guide, standardised loadings above roughly .40–.50 are often considered meaningful), and in the theoretically expected direction? A standardised loading greater than 1, or a negative variance, is not a sign of an unusually strong effect — it's a red flag for an identification or estimation problem (a Heywood case; see above). Are any factor correlations implausibly high (approaching 1), which can signal that two supposedly distinct factors may not actually be distinguishable in this data? A model can show acceptable overall fit indices while still containing individual estimates that are theoretically problematic, so both levels — overall fit and individual estimates — need to be checked. These "local fit" indicators — weak loadings, cross-loadings, large residual correlations, and modification indices — should all be examined alongside global fit, not instead of it.
+
+### Modification indices: proceed with caution
+Most software, including Jamovi, can suggest ways to improve model fit by relaxing constraints (for example, allowing an indicator to load on an additional factor, or allowing two error terms to correlate). These suggestions are based purely on what would improve fit statistically in this sample, not on what is theoretically sound. As a numerical anchor, a modification index above roughly 3.84 (the chi-square critical value for one degree of freedom at p < .05) is the traditional threshold at which a suggested change becomes "statistically noticeable," though software often defaults to a stricter cutoff (e.g., 10) to keep the list of suggestions manageable; either way, treat the index alongside the **Expected Parameter Change (EPC)** — the estimated size of the new parameter if added — since a statistically large modification index attached to a trivially small EPC is less compelling than the reverse.
+
+This is one of the most important cautions in CFA: modifying a model solely because a modification index suggests it, without an independent theoretical rationale, risks capitalising on chance patterns specific to your sample (a form of overfitting), and turns what was a confirmatory analysis into an exploratory one without acknowledging it as such. If a modification is made, it should be justified on substantive grounds, reported transparently, and ideally re-tested on an independent sample.
+
+If you're considering allowing two indicator error terms to correlate specifically (as opposed to changing which factor an item loads on), that particular move should be reserved for cases where all of the following hold: the two items belong to the same underlying construct, there is a clear theoretical reason to expect their errors to be related, and the items are either near-antonyms of each other or one is a reverse-coded version of a similar idea to the other. In practice, correlated error terms are primarily used to address **common method bias** — variance shared because of how items were asked, not because of the construct itself — rather than as a generic fit-improving trick (Rogers, 2024). Whatever you change, keep the scope of modification in view: research suggests measurement models get modified in some way in up to half of published CFA studies (Flake et al., 2017; Nye, 2022), which is not alarming in itself, but drastic changes — as a rough guide, altering more than about 20% of the originally specified items — should prompt you to question whether the original model was well chosen in the first place, rather than pressing on with an increasingly patched-together version of it (Kline, 2016).
+
+### Reliability and validity in CFA
+CFA also provides a natural framework for evaluating the quality of a measurement scale:
+
+- **Convergent validity**: The extent to which indicators of the same factor are strongly related to that factor, typically judged from the size of the standardised loadings and summarised using **Average Variance Extracted (AVE)**.
+- **Discriminant validity**: The extent to which factors that are supposed to be theoretically distinct are indeed statistically distinguishable from one another, rather than overlapping so much that they may be measuring the same thing.
+- **Composite reliability**: An estimate of the internal consistency of a factor's indicators, similar in purpose to Cronbach's alpha but calculated from the CFA loadings and error variances rather than from raw item correlations. The most commonly reported composite reliability coefficient is **McDonald's omega (ω)**, which — unlike Cronbach's alpha — does not assume every indicator contributes equally to the factor (an assumption called tau-equivalence that real items rarely meet exactly), making it generally the more defensible choice once you have CFA loadings available (Brown, 2015). As with alpha, values at or above roughly .70 are typically treated as an acceptable benchmark, though this is a convention rather than a hard rule. A growing body of methodological work argues that Cronbach's alpha should not be reported as the reliability coefficient once you're in CFA territory at all — its tau-equivalence assumption is essentially never met by real items, and it tends to underestimate reliability when loadings vary — with omega, or the **Greatest Lower Bound (GLB)**, recommended instead (Dunn, Baguley, & Brunsden, 2014; Flora, 2020; Trizano-Hermosilla & Alvarado, 2016, as cited in Rogers, 2024). Reporting at least omega, and ideally omega alongside GLB or another composite reliability estimate, is increasingly treated as the expected standard for a CFA write-up rather than an optional extra.
+
+### Common pitfalls and cautions in CFA
+1. **Small sample size**: CFA models generally require larger samples than EFA for stable estimates, particularly as the model becomes more complex (more factors, more indicators, or estimated correlations among factors). Unstable estimates and non-convergence are common with small or moderate samples. Simple rules of thumb (a minimum N of 100 or 200, or an N-to-parameters ratio like 10:1) are convenient but don't transfer well across different models and data types, and the WLS/DWLS family generally needs larger samples than ML to perform reliably; where feasible, a proper (ideally Monte Carlo simulation-based) power analysis for your specific model is more defensible than any fixed rule (Feng & Hancock, 2023, as cited in Rogers, 2024). Hoelter's Critical N — an estimate of the largest sample size at which your model would still be considered acceptable — is one commonly reported post-hoc diagnostic worth knowing about, if your software provides it.
+2. **Non-normal or ordinal data treated as continuous**: Using an estimator that assumes normally distributed continuous data on Likert-type items can distort fit statistics and standard errors; check your indicator type and choose the estimator accordingly.
+3. **Missing data handled carelessly**: Simply deleting cases with any missing values (listwise deletion) can bias results if the missingness is not completely random; modern approaches such as Full Information Maximum Likelihood are generally preferable.
+4. **Over-reliance on a single fit index**: No single index tells the whole story; report several together and interpret them as a pattern, not in isolation.
+5. **Post-hoc model modification without theoretical justification**: As above, this is one of the most common misuses of CFA in practice.
+6. **Testing a model that was built by exploring the same data**: If a factor structure was derived using EFA on a given sample, confirming it with CFA on the *same* sample is circular. Wherever possible, use an independent sample (or split your sample) for the CFA step.
+7. **Ignoring local misfit while overall fit looks acceptable**: Good global fit indices do not guarantee that every part of the model fits well; residual correlations and modification indices are worth inspecting even when overall fit looks fine, to understand *where*, not just *whether*, the model may be imperfect.
+
+### Testing CFA assumptions in Jamovi
+- **Multivariate normality**: Jamovi's CFA module, using the default Maximum Likelihood estimator, assumes reasonably continuous, multivariate normal indicators. Inspect univariate skewness and kurtosis via Descriptives; severe violations distort the chi-square test and standard errors even when other fit indices look acceptable.
+- **Sample size relative to model complexity**: there's no single test for this — check that your sample comfortably exceeds the model's number of freely estimated parameters. A common informal guideline is at least 10, and ideally 15–20, cases per estimated parameter.
+- **Identification**: Jamovi will generally fail to converge or return an error if the model as specified is not identified. Treat that as a signal to check the number of indicators per factor and the model's degrees of freedom — not as a technical glitch to work around.
+- **Multicollinearity among indicators**: extremely highly correlated (near-redundant) indicators can cause estimation problems; check the correlation matrix beforehand via Descriptives.
+
+### Steps to run CFA in Jamovi
+1. Factor → Confirmatory Factor Analysis.
+2. For each latent factor in your model, create a factor box and drag in the indicator variables you expect to load on it — this is how Jamovi lets you specify the measurement model directly, without writing separate model syntax.
+3. Decide whether factors are allowed to correlate (the default) or should be constrained to be uncorrelated, based on your theoretical model.
+4. Under Estimation options, confirm the estimation method (Maximum Likelihood is the default; check for a robust or categorical-data option if your indicators are ordinal or clearly non-normal).
+5. Review the model fit indices (chi-square, CFI, TLI, RMSEA, SRMR) together, not in isolation.
+6. Review the factor loadings (standardised and unstandardised) and factor correlations, if factors are allowed to correlate.
+7. If fit is poor, resist jumping straight to modification indices; first reconsider the theoretical model, item wording, and whether the sample and data meet the assumptions above.
+8. Report the full set of fit indices, loadings, and any modifications made — with justification — in your write-up.
+
+*(As with EFA and PCA, exact menu labels can vary slightly across Jamovi versions and installed modules — confirm the current layout on the version you'll use in the practical session.)*
+
+### Common real-world scenarios in CFA
+1. **Model fails to converge**: simplify the model (fewer factors or indicators), check for identification problems, check for near-singular indicator correlations, and confirm you have enough cases relative to the number of parameters.
+2. **Negative variance estimate (a Heywood case)**: often signals an over-parameterised or under-identified model, or too small a sample for the model's complexity; consider re-specifying the model or interpreting cautiously.
+3. **Poor overall model fit** (RMSEA/CFI/TLI outside conventional ranges): don't reach for modification indices immediately. First re-examine item content (are all indicators genuinely measuring the same construct?), check for reverse-coded items needing recoding, and consider whether the theoretical model itself needs revising rather than a statistical patch.
+4. **A high modification index suggests correlated residuals or a cross-loading**: only implement this if there's an independent theoretical or methodological reason (e.g., two items share very similar wording, or were collected via the same sub-method), and always report the change transparently as a deviation from the original hypothesis.
+5. **A standardised loading estimate above 1 (out of bounds)**: indicates an identification or estimation problem, not a genuinely very strong loading; re-examine the model specification.
+6. **Missing data**: check whether Jamovi is applying Full Information Maximum Likelihood or listwise deletion by default, and prefer FIML-based handling over deleting cases where possible.
+7. **Testing a model built from an EFA run on the same sample**: this is circular. If you don't have an independent sample, consider randomly splitting your dataset into an EFA half and a CFA half before running either analysis.
+8. **Indicators are ordinal (e.g., 5-point Likert items) but treated as continuous by default**: this can distort fit statistics and standard errors; check whether Jamovi's CFA offers a categorical-data estimator, and if not, note this as a limitation or consider specialised SEM software (e.g., R's lavaan) for the final analysis.
+
+### Reporting a CFA: a checklist
+Reviews of published CFA and SEM studies have repeatedly found that reporting practices are inconsistent, often omitting details a reader would need to judge the analysis (Schreiber, Nora, Stage, Barlow, & King, 2006). Before submitting, check that your methods and results sections cover:
+
+- Theoretical/empirical justification for the specified model (why these indicators, why this factor structure).
+- Sample size, and sample characteristics relevant to generalisability.
+- Software and estimation method used (and why, if not the default ML).
+- How missing data were handled.
+- Descriptive statistics and evidence on distributional assumptions (e.g., univariate/multivariate normality) for the indicators.
+- Full model fit reporting: chi-square (scaled, if a robust estimator was used) and its degrees of freedom, plus at least CFI, TLI (or equivalent incremental index), RMSEA (with its confidence interval), and SRMR — not a subset chosen after the fact because it looks favourable.
+- Standardised factor loadings for every indicator (not just the "good" ones).
+- Factor correlations, if factors were allowed to correlate.
+- Reliability estimates for each factor — omega and/or GLB rather than Cronbach's alpha, per above.
+- Any modifications made to the originally specified model, with their theoretical justification, clearly distinguished from the original a priori model, and the cutoffs used for modification indices.
+- Whether the model was tested on the same sample used for any prior EFA, or on an independent sample (see "Does CFA always need to be preceded by an EFA?" above).
+
+## EFA vs CFA, at a glance
+
+Having now seen both in depth, the practical distinction is this: EFA is the right tool when you do not yet have a firm hypothesis about how your variables group together, and you want the data to suggest a structure — it is naturally exploratory and should be treated as generating hypotheses for future testing, not confirming them. CFA is the right tool once you do have a specific, theory-based structure to test, whether from prior research, a validated instrument, or an earlier EFA conducted on different data. Using the two together, in sequence and on independent samples, is one of the most defensible workflows in scale development and validation research.
+
+| | EFA | CFA |
+|---|---|---|
+| Prior hypothesis about structure? | Not required | Required |
+| Purpose | Discover a plausible structure | Test a specified structure |
+| Typical role | Early-stage scale development | Later-stage validation/confirmation |
+| Output treated as | A hypothesis | A tested (supported or not) model |
+
+## Comparison: Factor Analysis, PCA, EFA, and CFA at a glance
+
+The table below pulls together everything covered in these notes into a single reference. "Factor Analysis" here refers to the general family of methods (of which EFA and CFA are the two branches); PCA is a related but conceptually distinct technique that is often taught and used alongside it.
+
+| | Factor Analysis (general) | PCA | EFA | CFA |
+|---|---|---|---|---|
+| **What it is** | A family of methods for identifying latent variables that explain correlations among observed variables | A data-reduction technique that builds new composite variables (components) from observed variables | The exploratory branch of factor analysis: uncovers a plausible factor structure without a prior hypothesis | The confirmatory branch of factor analysis: tests a pre-specified factor structure |
+| **Underlying logic** | Correlations among variables are caused by unobserved latent variables | Variance in the data is summarised as efficiently as possible, with no causal claim | Same logic as factor analysis generally, applied without a prior structure | Same logic as factor analysis generally, applied to a fixed, researcher-specified structure |
+| **Structure specified in advance?** | Depends on branch (see EFA/CFA) | No — components are derived purely from the data | No — the number and content of factors emerges from the data | Yes — indicators, factors, and (usually) factor correlations are all specified before estimation |
+| **What "loading" reflects** | Relationship between an observed variable and a latent factor | Relationship between an observed variable and a component (includes all variance, including error) | Relationship between an observed variable and a factor (shared/common variance only) | A fixed, hypothesised relationship between an indicator and its factor, estimated and tested |
+| **Error/uniqueness modelled separately?** | Yes, in principle | No — all variance (including error) is absorbed into the components | Yes — communality vs uniqueness is a core distinction | Yes — explicitly, as part of the model specification |
+| **Rotation** | N/A (applies within EFA) | Orthogonal only (e.g., Varimax), in most software including Jamovi | Orthogonal or oblique (e.g., Varimax vs Promax/Oblimin) | Not applicable — the model is fixed by specification, not rotated |
+| **Typical goal in practice** | Understand or test the structure behind a set of measures | Reduce many variables into fewer composite scores for further analysis | Discover a plausible construct structure, e.g., during scale development | Confirm/validate a construct structure, e.g., testing a published scale in a new sample |
+| **Output treated as** | A hypothesis (EFA) or a tested model (CFA) | A useful summary, not a claim about latent constructs | A hypothesis to be tested further (ideally with CFA on independent data) | A tested model — supported, partially supported, or not supported by the data |
+| **Key checks before running** | Adequate correlation (KMO, Bartlett's), adequate sample size | Adequate correlation, no extreme outliers, appropriate scaling | Adequate correlation, adequate sample size, normality (for ML extraction) | Model identification, adequate sample size relative to model complexity, indicator distribution |
+| **Key output to report** | — | Component loadings, eigenvalues, variance explained | Factor loadings, communalities, factor correlations (if oblique), number of factors retained and why | Fit indices (CFI, TLI, RMSEA, SRMR), standardised loadings, factor correlations, any modifications made |
+| **In Jamovi** | — | Factor → PCA | Factor → Exploratory Factor Analysis | Factor → Confirmatory Factor Analysis |
+
+## Conclusion
+
+Factor analysis, in both its exploratory and confirmatory forms, is a powerful tool for uncovering and testing the underlying structure of complex datasets. EFA helps you discover a plausible structure when one is not yet known; CFA lets you rigorously test a structure once you have a specific hypothesis, whether from theory, prior research, or an earlier EFA. Used together, on independent samples, they form one of the most defensible workflows for developing and validating measurement instruments in psychology, education, health, and the social sciences more broadly.
+
+## References
+
+American Educational Research Association, American Psychological Association, & National Council on Measurement in Education. (2014). *Standards for educational and psychological testing.* American Educational Research Association.
+
+Bido, D. S., Mantovani, D. M. N., & Cohen, E. D. (2018). Destruction of measurement scale through exploratory factor analysis in production and operations research. *Management & Production, 25*(2), 384–397.
+
+Arifin, W. N. (2023). *Internal structure evidence of validity* [Lecture slides]. Biostatistics and Research Methodology Unit, Universiti Sains Malaysia. https://wnarifin.github.io
+
+Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2nd ed.). Guilford Press.
+
+Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., & Strahan, E. J. (1999). Evaluating the use of exploratory factor analysis in psychological research. *Psychological Methods, 4*(3), 272–299.
+
+Gerbing, D. W., & Hamilton, J. G. (1996). Viability of exploratory factor analysis as a precursor to confirmatory factor analysis. *Structural Equation Modeling, 3*(1), 62–72.
+
+Grice, J. W. (2001). Computing and evaluating factor scores. *Psychological Methods, 6*(4), 430–450.
+
+McNeish, D., & Wolf, M. G. (2023). Dynamic fit index cutoffs for confirmatory factor analysis models. *Psychological Methods, 28*(1), 61–88.
+
+Henson, R. K., & Roberts, J. K. (2006). Use of exploratory factor analysis in published research: Common errors and some comment on improved practice. *Educational and Psychological Measurement, 66*(3), 393–416.
+
+Horn, J. L. (1965). A rationale and test for the number of factors in factor analysis. *Psychometrika, 30*(2), 179–185.
+
+Kline, R. B. (2016). *Principles and practice of structural equation modeling* (4th ed.). Guilford Press.
+
+Konishi, S. (2014). *Introduction to multivariate analysis: Linear and nonlinear modeling.* CRC Press.
+
+Marcoulides, G. A., & Hershberger, S. L. (1997). *Multivariate statistical methods: A first course.* Psychology Press.
+
+Osborne, J. (Ed.). (2008). *Best practices in quantitative methods.* SAGE Publications. https://doi.org/10.4135/9781412995627
+
+Pett, M. A., Lackey, N. R., & Sullivan, J. J. (2003). *Making sense of factor analysis: The use of factor analysis for instrument development in health care research.* Sage Publications.
+
+Rogers, P. (2024). Best practices for your confirmatory factor analysis: A JASP and lavaan tutorial. *Behavior Research Methods.* Advance online publication. https://doi.org/10.31219/osf.io/57efj
+
+Schmitt, T. A. (2011). Current methodological considerations in exploratory and confirmatory factor analysis. *Journal of Psychoeducational Assessment, 29*(4), 304–321.
+
+Schreiber, J. B., Nora, A., Stage, F. K., Barlow, E. A., & King, J. (2006). Reporting structural equation modeling and confirmatory factor analysis results: A review. *The Journal of Educational Research, 99*(6), 323–338.
+
+Snook, S. C., & Gorsuch, R. L. (1989). Component analysis versus common factor analysis: A Monte Carlo study. *Psychological Bulletin, 106*(1), 148–154.
+
+Xia, Y., & Yang, Y. (2019). RMSEA, CFI, and TLI in structural equation modeling with ordered categorical data: The story they tell depends on the estimation methods. *Behavior Research Methods, 51*(1), 409–428.
+
+Spearman, C. (1904). "General intelligence," objectively determined and measured. *The American Journal of Psychology, 15*(2), 201–293.
+
+Tabachnick, B. G., & Fidell, L. S. (2007). *Using multivariate statistics* (5th ed.). Pearson Education.
+
+Taylor, A. (2001, rev. 2004). *A brief introduction to factor analysis* [Unpublished teaching handout]. Department of Psychology, Macquarie University.
+
+Thompson, B. (2004). *Exploratory and confirmatory factor analysis: Understanding concepts and applications.* American Psychological Association.
+
+Thurstone, L. L. (1947). *Multiple-factor analysis.* University of Chicago Press.
+
+Velicer, W. F. (1976). Determining the number of components from the matrix of partial correlations. *Psychometrika, 41*(3), 321–327.
+
+Watkins, M. W. (2018). Exploratory factor analysis: A guide to best practice. *Journal of Black Psychology, 44*(3), 219–246.
+
+Widaman, K. F. (1993). Common factor analysis versus principal component analysis: Differential bias in representing model parameters? *Multivariate Behavioral Research, 28*(3), 263–311.
+
+Widaman, K. F. (2007). Common factors versus components: Principals and principles, errors and misconceptions. In R. Cudeck & R. C. MacCallum (Eds.), *Factor analysis at 100: Historical developments and future directions* (pp. 177–203). Lawrence Erlbaum Associates.
+
+Williams, B., Brown, T., & Onsman, A. (2010). Exploratory factor analysis: A five-step guide for novices. *Australasian Journal of Paramedicine, 8*(3), Article 1.
