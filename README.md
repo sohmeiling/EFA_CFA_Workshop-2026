@@ -57,18 +57,6 @@ quarto render "Slides/01-pca-efa-lecture-slides.qmd"
 
 You can also open the `.qmd` files directly in a Quarto-enabled editor.
 
-## Notes on project workflow
-
-This project is primarily a source-materials repository. Generated outputs such as HTML render files and `_files/` directories are intentionally ignored by Git to keep the repo clean and focused on the source content.
-
-## Suggested workflow
-
-1. Edit the source `.qmd` and `.md` files.
-2. Render locally to preview results.
-3. Check `git status` before committing.
-4. Commit only intended source files.
-5. Push changes to the remote repository.
-
 ## Licensing and usage
 
 Use these materials for teaching and learning within the workshop context. If you plan to reuse the materials beyond the workshop, review any local institutional or third-party licensing expectations before distributing them.
