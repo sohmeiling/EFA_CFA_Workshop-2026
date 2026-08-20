@@ -16,16 +16,15 @@
 /.quarto/
 /_freeze/
 *_cache/
-**/*.html
-**/*_files/
+
+
 **/.quarto/
 **/_freeze/
 
 # Generated slide assets / unused folders
 Slides/unused/
 Slides/images/unused/
-Slides/**/*.html
-Slides/**/*_files/
+
 
 # Editor / IDE
 .vscode/
